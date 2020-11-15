@@ -58,9 +58,9 @@ class SmoothGrad(VanillaGrad):
             noise = np.random.normal(0, stdev, x.shape).astype(np.float32)
             x_plus_noise = x + noise
             if self.cuda:
-                x_plus_noise = Variable(torch.from_numpy(x_plus_noise).cuda(), requires_grad=True)
+                x_plus_noise = torch.from_numpy(x_plus_noise).cuda().requires_grad_(True)
             else:
-                x_plus_noise = Variable(torch.from_numpy(x_plus_noise), requires_grad=True)
+                x_plus_noise = torch.from_numpy(x_plus_noise).requires_grad_(True)
             output = self.pretrained_model(x_plus_noise)
 
             if index is None:
@@ -69,14 +69,14 @@ class SmoothGrad(VanillaGrad):
             one_hot = np.zeros((1, output.size()[-1]), dtype=np.float32)
             one_hot[0][index] = 1
             if self.cuda:
-                one_hot = Variable(torch.from_numpy(one_hot).cuda(), requires_grad=True)
+                one_hot = torch.from_numpy(one_hot).cuda().requires_grad_(True)
             else:
-                one_hot = Variable(torch.from_numpy(one_hot), requires_grad=True)
+                one_hot = torch.from_numpy(one_hot).requires_grad_(True)
             one_hot = torch.sum(one_hot * output)
 
             if x_plus_noise.grad is not None:
                 x_plus_noise.grad.data.zero_()
-            one_hot.backward(retain_variables=True)
+            one_hot.backward(retain_graph=True)
 
             grad = x_plus_noise.grad.data.cpu().numpy()
 
